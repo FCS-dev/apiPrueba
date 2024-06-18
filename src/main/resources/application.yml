@@ -1,0 +1,24 @@
+#spring.application.name=apiPrueba
+spring:
+  application:
+    name: apiPrueba
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    platform: postgres
+    url: jdbc:postgresql://localhost:5432/fcs_api
+    username: admin
+    password: postgresql
+    driverClassName: org.postgresql.Driver
+#server:
+#  port: 5432
+server:
+  error:
+    include-message: always
