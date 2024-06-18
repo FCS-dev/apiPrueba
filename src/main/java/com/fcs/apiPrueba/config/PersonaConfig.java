@@ -52,7 +52,4 @@ public class PersonaConfig {
             personaRepository.saveAll(List.of(p1, p2, p3, p4));
         };
     }
-
-    ;
-
 }
