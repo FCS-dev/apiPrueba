@@ -33,7 +33,23 @@ public class PersonaConfig {
                     "celinda@gmail.com",
                     0,
                     HashGenerator.generateHash("celinda"));
-            personaRepository.saveAll(List.of(p1, p2));
+            Persona p3 = new Persona(
+                    "Diego Miguel",
+                    "Calderon",
+                    "Gamboa",
+                    LocalDate.of(2002, Month.JUNE, 11),
+                    "diego@gmail.com",
+                    0,
+                    HashGenerator.generateHash("diego"));
+            Persona p4 = new Persona(
+                    "Rodrigo Fernando",
+                    "Calderon",
+                    "Gamboa",
+                    LocalDate.of(2004, Month.OCTOBER, 10),
+                    "roro@gmail.com",
+                    0,
+                    HashGenerator.generateHash("rodrigo"));
+            personaRepository.saveAll(List.of(p1, p2, p3, p4));
         };
     }
 
