@@ -11,7 +11,8 @@ public class ControllerExceptionHandler {
 
     @ExceptionHandler(value = ApiExceptionEntity.class)
     public ResponseEntity<ErrorDTO> apiValidationExceptionHandler(ApiExceptionEntity e) {
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorDTO errorDTO = ErrorDTO
+                .builder()
                 .codigoError(e.getCodigoError())
                 .mensaje(e.getMessage())
                 .build();

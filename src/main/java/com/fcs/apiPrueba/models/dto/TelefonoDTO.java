@@ -1,4 +1,7 @@
 package com.fcs.apiPrueba.models.dto;
 
-public class TelefonoDTO {
+public record TelefonoDTO(
+        Long idTelefono,
+        String numeroTelefono
+) {
 }

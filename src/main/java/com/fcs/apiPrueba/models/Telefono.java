@@ -4,20 +4,46 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "telefonos")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
+
 public class Telefono {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long idTelefono;
-    @Column(nullable = false, length = 20)
+    private Long id;
+
+    @Column(length = 20)
     private String numeroTelefono;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idPersona")
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "personaId")
     private Persona persona;
 
+    public Telefono(
+            String numeroTelefono,
+            Persona persona) {
+        this.numeroTelefono = numeroTelefono;
+        this.persona = persona;
+    }
+
+    public Telefono(
+            Long id,
+            String numeroTelefono) {
+        this.id = id;
+        this.numeroTelefono = numeroTelefono;
+    }
+
+    @Override
+    public String toString() {
+        return "Telefono{" +
+                "id=" + id +
+                ", numeroTelefono='" + numeroTelefono + '\'' +
+                '}';
+    }
 }

@@ -7,5 +7,8 @@ public class HashGenerator {
         String salt = BCrypt.gensalt();
         // Generar el hash con salt BCrypt
         return BCrypt.hashpw(password, salt);
+
+        /// Para comparar el password (true or false) con el hash:
+        /// BCrypt.checkpw("clave",persona.getPassword());
     }
 }

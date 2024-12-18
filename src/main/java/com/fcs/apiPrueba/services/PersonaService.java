@@ -1,10 +1,14 @@
 package com.fcs.apiPrueba.services;
 
 import com.fcs.apiPrueba.exceptions.ApiExceptionEntity;
+import com.fcs.apiPrueba.models.Correo;
 import com.fcs.apiPrueba.models.Persona;
-import com.fcs.apiPrueba.models.dto.DeliveredPersonaDTO;
-import com.fcs.apiPrueba.models.dto.ReceivedPersonaDTO;
+import com.fcs.apiPrueba.models.Telefono;
+import com.fcs.apiPrueba.models.dto.PersonaCrudDTO;
+import com.fcs.apiPrueba.models.dto.PersonaDTO;
+import com.fcs.apiPrueba.repositories.CorreoRepository;
 import com.fcs.apiPrueba.repositories.PersonaRepository;
+import com.fcs.apiPrueba.repositories.TelefonoRepository;
 import com.fcs.apiPrueba.utils.HashGenerator;
 import com.fcs.apiPrueba.utils.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,66 +17,167 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 public class PersonaService {
 
     private final PersonaRepository personaRepository;
+    private final TelefonoRepository telefonoRepository;
+    private final CorreoRepository correoRepository;
+
 
     @Autowired
-    public PersonaService(PersonaRepository personaRepository) {
+    public PersonaService(PersonaRepository personaRepository, TelefonoRepository telefonoRepository, CorreoRepository correoRepository) {
         this.personaRepository = personaRepository;
+        this.telefonoRepository = telefonoRepository;
+        this.correoRepository = correoRepository;
+
     }
 
-
     // Find all
-    public List<DeliveredPersonaDTO> getAllPersonas() {
-        List<Persona> listadoPersonas = personaRepository.findAllByOrderByIdPersonaAsc();
+    public List<PersonaDTO> getAllPersonas() {
+        List<Persona> listadoPersonas = personaRepository.findAllByOrderByIdAsc();
         return Mapper.toListadoPersonaDTO(listadoPersonas);
     }
 
+
     // Insert
-    public DeliveredPersonaDTO insertPersona(ReceivedPersonaDTO receivedPersonaDTO) {
-        String password = HashGenerator.generateHash(receivedPersonaDTO.password());
+    public PersonaDTO insertPersona(PersonaCrudDTO personaCrudDTO) {
+        String password = HashGenerator.generateHash(personaCrudDTO.password());
         Persona persona = new Persona(
-                receivedPersonaDTO.nombres(),
-                receivedPersonaDTO.apellidoPaterno(),
-                receivedPersonaDTO.apellidoMaterno(),
-                receivedPersonaDTO.fechaNacimiento(),
-                receivedPersonaDTO.correo(),
+                personaCrudDTO.nombres(),
+                personaCrudDTO.apellidoPaterno(),
+                personaCrudDTO.apellidoMaterno(),
+                personaCrudDTO.fechaNacimiento(),
                 0,
-                password);
+                password
+        );
         personaRepository.save(persona);
-        return Mapper.toPersonaDTO(persona);
+        personaCrudDTO.telefonos().forEach(telefono -> {
+                    Telefono tlf = new Telefono(telefono.numeroTelefono(), persona);
+                    telefonoRepository.save(tlf);
+                }
+        );
+        personaCrudDTO.correos().forEach(correo -> {
+                    Correo email = new Correo(correo.correo(), persona);
+                    correoRepository.save(email);
+                }
+        );
+        return Mapper.toPersonaDTO(personaCrudDTO);
     }
 
     // Update
     @Transactional
-    public DeliveredPersonaDTO updatePersona(Long idPersona, ReceivedPersonaDTO receivedPersonaDTO) {
-        Optional<Persona> oldPersona = personaRepository.findById(idPersona);
-        if (oldPersona.isEmpty()) {
+    public PersonaDTO updatePersona(Long idPersona, PersonaCrudDTO personaCrudDTO) {
+        Optional<Persona> optPersona = personaRepository.findById(idPersona);
+        if (optPersona.isEmpty()) {
             throw new ApiExceptionEntity(
                     "Persona con id " + idPersona + " no encontrada",
                     "BPNE",
                     HttpStatus.BAD_REQUEST);
         }
-        oldPersona.get().setNombres(receivedPersonaDTO.nombres());
-        oldPersona.get().setApellidoPaterno(receivedPersonaDTO.apellidoPaterno());
-        oldPersona.get().setApellidoMaterno(receivedPersonaDTO.apellidoMaterno());
-        oldPersona.get().setFechaNacimiento(receivedPersonaDTO.fechaNacimiento());
-        oldPersona.get().setCorreo(receivedPersonaDTO.correo());
-        oldPersona.get().setPassword(HashGenerator.generateHash(receivedPersonaDTO.password()));
-        return Mapper.toPersonaDTO(oldPersona.get());
+
+        List<Telefono> tlfsxVerificar = optPersona.get().getTelefonos();
+        tlfsxVerificar.forEach(tlfEnBD -> {
+            Long idGuardado = tlfEnBD.getId();
+            boolean existe=false;
+            existe = personaCrudDTO.telefonos().stream().anyMatch(idtlf -> Objects.equals(idtlf.idTelefono(), idGuardado));
+            if (!existe) {
+                telefonoRepository.deleteById(tlfEnBD.getId());
+            }
+        });
+
+        if (personaCrudDTO.telefonos().isEmpty()) {
+            telefonoRepository.deleteByPersonaId(idPersona);
+        } else {
+            personaCrudDTO.telefonos().forEach(telefono -> {
+                        boolean tlfEnBlanco = false;
+                        boolean tlfNuevo = false;
+                        if (telefono.numeroTelefono().isEmpty()) {
+                            tlfEnBlanco = true;
+                        }
+                        if (telefono.idTelefono() == null || telefono.idTelefono() == 0) {
+                            tlfNuevo = true;
+                        }
+                        if (tlfEnBlanco && tlfNuevo) {
+                            throw new ApiExceptionEntity(
+                                    "No se puede agregar un telefono sin datos", // le faltan ambos datos
+                                    "BTEB",
+                                    HttpStatus.BAD_REQUEST);
+                        }
+                        if (!(tlfEnBlanco || tlfNuevo)) {
+                            Optional<Telefono> tlf = telefonoRepository.findById(telefono.idTelefono());
+                            tlf.ifPresent(value -> value.setNumeroTelefono(telefono.numeroTelefono()));
+                        } else {
+                            if (tlfEnBlanco) {
+                                telefonoRepository.deleteById(telefono.idTelefono());
+                            }
+                            if (tlfNuevo) {
+                                Telefono tlf = new Telefono(telefono.numeroTelefono(), optPersona.get());
+                                Telefono saveTelefono = telefonoRepository.save(tlf);
+                            }
+                        }
+                    }
+            );
+        }
+        if (personaCrudDTO.correos().isEmpty()) {
+            correoRepository.deleteByPersonaId(optPersona.get().getId());
+        } else {
+            personaCrudDTO.correos().forEach(correo -> {
+                        boolean correoEnBlanco = false;
+                        boolean correoNuevo = false;
+                        if (correo.correo().isEmpty()) {
+                            correoEnBlanco = true;
+                        }
+                        if (correo.idCorreo() == null || correo.idCorreo() == 0) {
+                            correoNuevo = true;
+                        }
+                        if (correoEnBlanco && correoNuevo) {
+                            throw new ApiExceptionEntity(
+                                    "No se puede agregar un correo sin datos", // le faltan ambos datos
+                                    "BTEB",
+                                    HttpStatus.BAD_REQUEST);
+                        }
+                        if (!(correoEnBlanco || correoNuevo)) {
+                            Optional<Correo> corre = correoRepository.findById(correo.idCorreo());
+                            corre.ifPresent(value -> value.setCorreo(correo.correo()));
+                        } else {
+                            if (correoEnBlanco) {
+                                correoRepository.deleteById(correo.idCorreo());
+                            }
+                            if (correoNuevo) {
+                                Correo corre = new Correo(correo.correo(), optPersona.get());
+                                Correo saveCorreo = correoRepository.save(corre);
+                            }
+                        }
+                    }
+            );
+        }
+        Persona newPersona = optPersona.get();
+        newPersona.setNombres(personaCrudDTO.nombres());
+        newPersona.setApellidoPaterno(personaCrudDTO.apellidoPaterno());
+        newPersona.setApellidoMaterno(personaCrudDTO.apellidoMaterno());
+        newPersona.setFechaNacimiento(personaCrudDTO.fechaNacimiento());
+
+        return Mapper.toPersonaDTO(personaCrudDTO);
     }
 
     // Find 1
-    public DeliveredPersonaDTO getPersona(Long idPersona) {
+//    public PersonaDTO getPersona(Long idPersona) {
+//        Optional<Persona> personaOpt = personaRepository.findById(idPersona);
+//        if (personaOpt.isPresent())
+//            return Mapper.toPersonaDTO(personaOpt.get());
+//        return null;
+//    }
+
+    // Find 1 UPD
+    public PersonaCrudDTO getPersonaUpd(Long idPersona) {
         Optional<Persona> personaOpt = personaRepository.findById(idPersona);
-        //return Mapper.toPersonaDTO(persona.get());
-        //return Mapper.toPersonaDTO(personaRepository.findById(idPersona).get());
         if (personaOpt.isPresent())
-            return Mapper.toPersonaDTO(personaOpt.get());
+            return Mapper.toPersonaUpdDTO(personaOpt.get());
         return null;
     }
 
@@ -86,12 +191,11 @@ public class PersonaService {
     }
 
     // Find with
-    public List<DeliveredPersonaDTO> getPersonasLike(String cadenaBuscar) {
+    public List<PersonaDTO> getPersonasLike(String cadenaBuscar) {
         List<Persona> personasCustom = personaRepository.findAllCustomNames(cadenaBuscar);
         if (personasCustom.isEmpty()) {
             throw new RuntimeException("No hay personas que contengan el nombre: " + cadenaBuscar);
         }
-        //return Mapper.toPersonaDTO(personasCustom.get());
         return Mapper.toListadoPersonaDTO(personasCustom);
     }
 

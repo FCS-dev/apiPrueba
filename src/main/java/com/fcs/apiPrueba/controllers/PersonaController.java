@@ -1,8 +1,8 @@
 package com.fcs.apiPrueba.controllers;
 
 import com.fcs.apiPrueba.exceptions.ApiExceptionEntity;
-import com.fcs.apiPrueba.models.dto.DeliveredPersonaDTO;
-import com.fcs.apiPrueba.models.dto.ReceivedPersonaDTO;
+import com.fcs.apiPrueba.models.dto.PersonaCrudDTO;
+import com.fcs.apiPrueba.models.dto.PersonaDTO;
 import com.fcs.apiPrueba.services.PersonaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/v1/personas")
+@CrossOrigin(origins = "*")
 public class PersonaController {
 
     private final PersonaService personaService;
@@ -25,9 +27,9 @@ public class PersonaController {
 
     // Find all
     @GetMapping("/")
-    public ResponseEntity<List<DeliveredPersonaDTO>> getAllPersonas() {
+    public ResponseEntity<List<PersonaDTO>> getAllPersonas() {
         String msg = null;
-        List<DeliveredPersonaDTO> listado = null;
+        List<PersonaDTO> listado = null;
         HttpStatus httpStatus = HttpStatus.OK;
         try {
             listado = personaService.getAllPersonas();
@@ -42,48 +44,27 @@ public class PersonaController {
         return ResponseEntity.status(httpStatus).body(listado);
     }
 
-    // Find 1
-    @GetMapping(value = "/{idPersona}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DeliveredPersonaDTO> get1Persona(@PathVariable("idPersona") Long idPersona) {
-        String msg = null;
-        DeliveredPersonaDTO deliveredPersonaDTO = null;
-        HttpStatus httpStatus = HttpStatus.OK;
-        try {
-            deliveredPersonaDTO = personaService.getPersona(idPersona);
-            if (deliveredPersonaDTO == null) {
-                msg = "No existe el id " + idPersona + " en la Base de Datos.";
-                httpStatus = HttpStatus.BAD_REQUEST;
-            }
-        } catch (RuntimeException e) {
-            msg = e.getMessage();
-        }
-        return ResponseEntity.status(httpStatus).body(deliveredPersonaDTO);
-        //return personaService.getPersona(idPersona);
-        //return null;
-    }
 
-    // Insert
-    @PostMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity newPersona(@RequestBody ReceivedPersonaDTO receivedPersonaDTO) {
-        if (receivedPersonaDTO.nombres() == null || receivedPersonaDTO.nombres().isBlank())
+    // Insert. ok? PersonaDTO : ApiExceptionEntity
+    @PostMapping(value="/",consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity newPersona(@RequestBody PersonaCrudDTO personaCrudDTO) {
+        if (personaCrudDTO.nombres() == null || personaCrudDTO.nombres().isBlank())
             throw new ApiExceptionEntity("VPN", "'NOMBRES' no válido", HttpStatus.BAD_REQUEST);
-        if (receivedPersonaDTO.apellidoPaterno() == null || receivedPersonaDTO.apellidoPaterno().isBlank())
+        if (personaCrudDTO.apellidoPaterno() == null || personaCrudDTO.apellidoPaterno().isBlank())
             throw new ApiExceptionEntity("VPAP", "'APELLIDO PATERNO' no válido", HttpStatus.BAD_REQUEST);
-        if (receivedPersonaDTO.apellidoMaterno() == null || receivedPersonaDTO.apellidoMaterno().isBlank())
+        if (personaCrudDTO.apellidoMaterno() == null || personaCrudDTO.apellidoMaterno().isBlank())
             throw new ApiExceptionEntity("VPAM", "'APELLIDO MATERNO' no válido", HttpStatus.BAD_REQUEST);
-        if (receivedPersonaDTO.fechaNacimiento() == null)
+        if (personaCrudDTO.fechaNacimiento() == null)
             throw new ApiExceptionEntity("VPFN", "'FECHA DE NACIMIENTO' no válido", HttpStatus.BAD_REQUEST);
-        if (receivedPersonaDTO.correo() == null || receivedPersonaDTO.correo().isBlank())
-            throw new ApiExceptionEntity("VPC", "'CORREO' no válido", HttpStatus.BAD_REQUEST);
-        if (receivedPersonaDTO.password() == null || receivedPersonaDTO.password().isBlank())
+        if (personaCrudDTO.password() == null || personaCrudDTO.password().isBlank())
             throw new ApiExceptionEntity("VPP", "'PASSWORD' no válido", HttpStatus.BAD_REQUEST);
-        return ResponseEntity.status(HttpStatus.CREATED).body(personaService.insertPersona(receivedPersonaDTO));
+        return ResponseEntity.status(HttpStatus.CREATED).body(personaService.insertPersona(personaCrudDTO));
     }
 
     // Update
     @PutMapping(path = "/{idPersona}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public DeliveredPersonaDTO updPersona(@PathVariable("idPersona") Long idPersona, @RequestBody ReceivedPersonaDTO receivedPersonaDTO) {
-        return personaService.updatePersona(idPersona, receivedPersonaDTO);
+    public PersonaDTO updPersona(@PathVariable("idPersona") Long idPersona, @RequestBody PersonaCrudDTO personaCrudDTO) {
+        return personaService.updatePersona(idPersona, personaCrudDTO);
     }
 
     // Delete
@@ -93,9 +74,27 @@ public class PersonaController {
     }
 
     // Find with
-    @GetMapping(value = "custom/{cadenaBuscar}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<DeliveredPersonaDTO> getPersonasCustom(@PathVariable("cadenaBuscar") String cadenaBuscar) {
+    @GetMapping(value = "/buscar/{cadenaBuscar}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<PersonaDTO> getPersonasCustom(@PathVariable("cadenaBuscar") String cadenaBuscar) {
         return personaService.getPersonasLike(cadenaBuscar);
     }
-}
 
+
+    // Find 1 for UPD
+    @GetMapping(value = "/{idPersona}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PersonaCrudDTO> getPersonaUpd(@PathVariable("idPersona") Long idPersona) {
+        String msg = null;
+        PersonaCrudDTO personaCrudDTO = null;
+        HttpStatus httpStatus = HttpStatus.OK;
+        try {
+            personaCrudDTO = personaService.getPersonaUpd(idPersona);
+            if (personaCrudDTO == null) {
+                msg = "No existe el id " + idPersona + " en la Base de Datos.";
+                httpStatus = HttpStatus.BAD_REQUEST;
+            }
+        } catch (RuntimeException e) {
+            msg = e.getMessage();
+        }
+        return ResponseEntity.status(httpStatus).body(personaCrudDTO);
+    }
+}

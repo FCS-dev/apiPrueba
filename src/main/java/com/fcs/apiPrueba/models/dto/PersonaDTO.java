@@ -1,9 +1,12 @@
 package com.fcs.apiPrueba.models.dto;
 
-public record DeliveredPersonaDTO(
-        Long idPersona,
+import java.util.List;
+
+public record PersonaDTO(
+        Long id,
         String nombreCompleto,
         java.time.LocalDate fechaNacimiento,
-        String correo,
+        List<TelefonoDTO> telefonos,
+        List<CorreoDTO> correos,
         Integer edad) {
 }
