@@ -20,23 +20,30 @@ public class Persona {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
     @Column(nullable = false, length = 100)
     private String nombres;
+
     @Column(nullable = false, length = 100)
     private String apellidoPaterno;
+
     @Column(nullable = false, length = 100)
     private String apellidoMaterno;
+
     @Column(nullable = false)
     private java.time.LocalDate fechaNacimiento;
+
     @Transient
     private Integer edad;
+
     @Column(nullable = false, length = 60)
     private String password;
+
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Correo> Correos;
+
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Telefono> Telefonos;
-
 
     public Persona(
             String nombres,
@@ -76,18 +83,4 @@ public class Persona {
         return Period.between(this.fechaNacimiento, LocalDate.now()).getYears();
     }
 
-    @Override
-    public String toString() {
-        return "Persona{" +
-                "id=" + id +
-                ", nombres='" + nombres + '\'' +
-                ", apellidoPaterno='" + apellidoPaterno + '\'' +
-                ", apellidoMaterno='" + apellidoMaterno + '\'' +
-                ", fechaNacimiento=" + fechaNacimiento +
-                ", edad=" + edad +
-                ", password='" + password + '\'' +
-                ", Correos=" + Correos +
-                ", Telefonos=" + Telefonos +
-                '}';
-    }
 }

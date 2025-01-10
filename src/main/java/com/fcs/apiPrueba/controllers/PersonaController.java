@@ -4,6 +4,7 @@ import com.fcs.apiPrueba.exceptions.ApiExceptionEntity;
 import com.fcs.apiPrueba.models.dto.PersonaCrudDTO;
 import com.fcs.apiPrueba.models.dto.PersonaDTO;
 import com.fcs.apiPrueba.services.PersonaService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -11,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/v1/personas")
@@ -26,7 +26,7 @@ public class PersonaController {
     }
 
     // Find all
-    @GetMapping("/")
+    @GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PersonaDTO>> getAllPersonas() {
         String msg = null;
         List<PersonaDTO> listado = null;
@@ -44,9 +44,8 @@ public class PersonaController {
         return ResponseEntity.status(httpStatus).body(listado);
     }
 
-
     // Insert. ok? PersonaDTO : ApiExceptionEntity
-    @PostMapping(value="/",consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity newPersona(@RequestBody PersonaCrudDTO personaCrudDTO) {
         if (personaCrudDTO.nombres() == null || personaCrudDTO.nombres().isBlank())
             throw new ApiExceptionEntity("VPN", "'NOMBRES' no válido", HttpStatus.BAD_REQUEST);
@@ -79,7 +78,6 @@ public class PersonaController {
         return personaService.getPersonasLike(cadenaBuscar);
     }
 
-
     // Find 1 for UPD
     @GetMapping(value = "/{idPersona}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PersonaCrudDTO> getPersonaUpd(@PathVariable("idPersona") Long idPersona) {
@@ -97,4 +95,5 @@ public class PersonaController {
         }
         return ResponseEntity.status(httpStatus).body(personaCrudDTO);
     }
+
 }

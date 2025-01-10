@@ -13,11 +13,14 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class Correo {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
     @Column(length = 150)
     private String correo;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "personaId")
     private Persona persona;
@@ -36,11 +39,4 @@ public class Correo {
         this.correo = correo;
     }
 
-    @Override
-    public String toString() {
-        return "Correo{" +
-                "id=" + id +
-                ", correo='" + correo + '\'' +
-                '}';
-    }
 }

@@ -11,15 +11,13 @@ import com.fcs.apiPrueba.repositories.PersonaRepository;
 import com.fcs.apiPrueba.repositories.TelefonoRepository;
 import com.fcs.apiPrueba.utils.HashGenerator;
 import com.fcs.apiPrueba.utils.Mapper;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.*;
 
 @Service
 public class PersonaService {
@@ -30,11 +28,13 @@ public class PersonaService {
 
 
     @Autowired
-    public PersonaService(PersonaRepository personaRepository, TelefonoRepository telefonoRepository, CorreoRepository correoRepository) {
+    public PersonaService(PersonaRepository personaRepository,
+                          TelefonoRepository telefonoRepository,
+                          CorreoRepository correoRepository
+    ) {
         this.personaRepository = personaRepository;
         this.telefonoRepository = telefonoRepository;
         this.correoRepository = correoRepository;
-
     }
 
     // Find all
@@ -83,10 +83,19 @@ public class PersonaService {
         List<Telefono> tlfsxVerificar = optPersona.get().getTelefonos();
         tlfsxVerificar.forEach(tlfEnBD -> {
             Long idGuardado = tlfEnBD.getId();
-            boolean existe=false;
+            boolean existe = false;
             existe = personaCrudDTO.telefonos().stream().anyMatch(idtlf -> Objects.equals(idtlf.idTelefono(), idGuardado));
             if (!existe) {
                 telefonoRepository.deleteById(tlfEnBD.getId());
+            }
+        });
+        List<Correo> correoxVerificar = optPersona.get().getCorreos();
+        correoxVerificar.forEach(correoEnBD -> {
+            Long idGuardado = correoEnBD.getId();
+            boolean existe = false;
+            existe = personaCrudDTO.correos().stream().anyMatch(idcorreo -> Objects.equals(idcorreo.idCorreo(), idGuardado));
+            if (!existe) {
+                correoRepository.deleteById(correoEnBD.getId());
             }
         });
 
@@ -199,5 +208,4 @@ public class PersonaService {
         return Mapper.toListadoPersonaDTO(personasCustom);
     }
 
-    ;
 }

@@ -12,8 +12,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-
 public class Telefono {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -39,11 +39,4 @@ public class Telefono {
         this.numeroTelefono = numeroTelefono;
     }
 
-    @Override
-    public String toString() {
-        return "Telefono{" +
-                "id=" + id +
-                ", numeroTelefono='" + numeroTelefono + '\'' +
-                '}';
-    }
 }
